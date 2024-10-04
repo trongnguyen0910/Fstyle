@@ -1,71 +1,97 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/page-1/welcomescreen.dart';
+import 'package:myapp/Home/welcomescreen.dart';
 import 'package:myapp/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../page-1/forgotpasswordscreen1.dart';
-import '../page-1/homescreen.dart';
+import '../Home/homescreen.dart';
 import 'package:http/http.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:http/http.dart' as http;
+
 class SignIn extends StatefulWidget {
   @override
   State<SignIn> createState() => _SignInState();
 }
 
 class _SignInState extends State<SignIn> {
- final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isPassword = true;
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   void login(String email, password) async {
     try {
-      Response response = await post(
-          Uri.parse('https://reqres.in/api/login'),
-          body: {'email': email, 'password': password});
+      var request = http.Request(
+        'POST',
+        Uri.parse(
+            'https://fresh-style.azurewebsites.net/odata/Authentications'),
+      );
+      request.headers['accept'] =
+          'application/json;odata.metadata=minimal;odata.streaming=true';
+      request.headers['Content-Type'] =
+          'application/json;odata.metadata=minimal;odata.streaming=true';
+      request.body = json.encode({
+        'userName': email,
+        'password': password,
+      });
 
+      var response = await request.send();
+      print('response: $response');
+      if (response.statusCode != 200) {
+        final snackBar = SnackBar(
+          /// need to set following properties for best effect of awesome_snackbar_content
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: 'Error',
+            message: 'Login something failed.',
+            contentType: ContentType.failure,
+          ),
+        );
 
-       var body = '${response.statusCode}';   
-       if (body != '200') {
-               
-                final snackBar = SnackBar(
-                  /// need to set following properties for best effect of awesome_snackbar_content
-                  elevation: 0,
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.transparent,
-                  content: AwesomeSnackbarContent(
-                    title: 'Error',
-                    message:
-                        'Something went wrong. User login failed.',
-
-                    /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
-                    contentType: ContentType.failure,
-                  ),
-                );
-
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(snackBar);
-              
-    } 
-    else{
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
-    }
-      if (response.statusCode == 200) {
-        print('account created successfully');
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(snackBar);
       } else {
-        print('failed');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
       }
+      var body = await response.stream.bytesToString();
+      print('$body');
+      print('status code: ${response.statusCode}');
+      var jsonResponse = json.decode(body);
+      var accountID = jsonResponse['Account']['AccountID'];
+      var accessToken = jsonResponse['AccessToken'];
+      var emailStylefer = jsonResponse['Account']['Email'];
+      print('$accountID');
+      print('AccessToken: $accessToken');
+      if (accountID != null) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('accountID', accountID);
+      }
+      if (emailStylefer != null) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('emailStylefer', emailStylefer);
+      }
+      if (accessToken != null) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('accessToken', accessToken);
+      }
+      // ignore: unrelated_type_equality_checks
+      
     } catch (e) {
       print(e.toString());
     }
-
-
   }
+
   @override
   Widget build(BuildContext context) {
     double baseWidth = 430;
@@ -114,7 +140,7 @@ class _SignInState extends State<SignIn> {
                   'Please enter your username/email and password to sign in.',
                   style: SafeGoogleFont(
                     'Satoshi',
-                    fontSize: 15 * ffem,
+                    fontSize: 16 * ffem,
                     fontWeight: FontWeight.w400,
                     height: 1.2575 * ffem / fem,
                     color: Color(0xff000000),
@@ -182,18 +208,17 @@ class _SignInState extends State<SignIn> {
                             color: Color(0xff000000),
                           ),
                           suffixIcon: IconButton(
-                                          icon:
-                                              // ignore: dead_code
-                                              _isPassword
-                                                  ? const Icon(Icons.visibility)
-                                                  : const Icon(
-                                                      Icons.visibility_off),
-                                          onPressed: () {
-                                            setState(() {
-                                              _isPassword = !_isPassword;
-                                            });
-                                          },
-                                        ),
+                            icon:
+                                // ignore: dead_code
+                                _isPassword
+                                    ? const Icon(Icons.visibility)
+                                    : const Icon(Icons.visibility_off),
+                            onPressed: () {
+                              setState(() {
+                                _isPassword = !_isPassword;
+                              });
+                            },
+                          ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10 * fem),
                             borderSide: BorderSide(
@@ -221,42 +246,7 @@ class _SignInState extends State<SignIn> {
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(31 * fem, 469 * fem, 0, 0),
-              child: Container(
-                width: 131 * fem,
-                height: 24 * fem,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.fromLTRB(0, 0, 10 * fem, 0),
-                      width: 24 * fem,
-                      height: 24 * fem,
-                      child: Image.asset(
-                        'assets/page-1/images/icon-checkmark-square-fill-1d2.png',
-                        width: 24 * fem,
-                        height: 24 * fem,
-                      ),
-                    ),
-                    Text(
-                      'Remember me',
-                      style: SafeGoogleFont(
-                        'Satoshi',
-                        fontSize: 15 * ffem,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2575 * ffem / fem,
-                        color: Color(0xff000000),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(137 * fem, 533 * fem, 0, 0),
+              padding: EdgeInsets.fromLTRB(137 * fem, 500 * fem, 0, 0),
               child: SizedBox(
                 width: 147 * fem,
                 height: 26 * fem,
@@ -277,41 +267,6 @@ class _SignInState extends State<SignIn> {
                       height: 1.2575 * ffem / fem,
                       color: Color(0xff6cc51d),
                     ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(162 * fem, 590 * fem, 0, 0),
-              child: SizedBox(
-                width: 103 * fem,
-                height: 19 * fem,
-                child: Text(
-                  'or continue with',
-                  style: SafeGoogleFont(
-                    'Satoshi',
-                    fontSize: 15 * ffem,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2575 * ffem / fem,
-                    color: Color(0xff000000),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(36 * fem, 515 * fem, 0, 0),
-              child: SizedBox(
-                width: 357 * fem,
-                height: 1 * fem,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xffd9d9d9),
                   ),
                 ),
               ),
@@ -345,7 +300,7 @@ class _SignInState extends State<SignIn> {
             alignment: Alignment.topLeft,
             child: GestureDetector(
               onTap: () {
-                 if (_formKey.currentState?.validate() == false) {
+                if (_formKey.currentState?.validate() == false) {
                   return;
                 }
                 login(_usernameController.text.toString(),
@@ -383,60 +338,6 @@ class _SignInState extends State<SignIn> {
                       ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(99 * fem, 640 * fem, 0, 0),
-              child: Container(
-                width: 233 * fem,
-                height: 60 * fem,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.fromLTRB(0, 0, 13 * fem, 0),
-                      padding: EdgeInsets.fromLTRB(
-                          39 * fem, 13 * fem, 41 * fem, 17 * fem),
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Color(0xffd9d9d9)),
-                        borderRadius: BorderRadius.circular(60 * fem),
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: 30 * fem,
-                          height: 30 * fem,
-                          child: Image.asset(
-                            'assets/page-1/images/google-eZe.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.fromLTRB(
-                          42 * fem, 13 * fem, 38 * fem, 17 * fem),
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Color(0xffd9d9d9)),
-                        borderRadius: BorderRadius.circular(60 * fem),
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: 25 * fem,
-                          height: 25 * fem,
-                          child: Image.asset(
-                            'assets/page-1/images/facebook.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),

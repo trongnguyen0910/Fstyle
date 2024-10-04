@@ -1,12 +1,12 @@
 import 'dart:math';
-
+import 'dart:convert';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:myapp/page-1/welcomescreen.dart';
+import 'package:myapp/Home/welcomescreen.dart';
 import 'package:myapp/Register/CompleteProfile.dart';
 import 'package:myapp/utils.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
@@ -26,53 +26,64 @@ class _CreateAccountState extends State<CreateAccount> {
   bool _isPassword = true;
   bool _isConfirmPassword = true;
 
-  void register(String email, password) async {
-    try {
-      Response response = await post(
-          Uri.parse('https://reqres.in/api/register'),
-          body: {'email': email, 'password': password});
-
-
-       var body = '${response.statusCode}';   
-       if (body != '200') {
-               
-                final snackBar = SnackBar(
-                  /// need to set following properties for best effect of awesome_snackbar_content
-                  elevation: 0,
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.transparent,
-                  content: AwesomeSnackbarContent(
-                    title: 'Error',
-                    message:
-                        'Something went wrong. User registration failed.',
-
-                    /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
-                    contentType: ContentType.failure,
-                  ),
-                );
-
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(snackBar);
-              
-    } 
-    else{
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SuccessfulCreateAccount()),
+void register(String email, password) async {
+  try {
+    Response response = await post(
+      Uri.parse('https://reqres.in/api/register'),
+      body: {'email': email, 'password': password},
     );
-    }
-      if (response.statusCode == 200) {
-        print('account created successfully');
-      } else {
-        print('failed');
-      }
-    } catch (e) {
-      print(e.toString());
-    }
 
+    var body = response.body;
+    var statusCode = response.statusCode;
 
+    if (statusCode == 200) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SuccessfulCreateAccount()),
+      );
+      print('account created successfully');
+    } else if (statusCode == 400) {
+      // If the status code is 400, there might be a validation error in the request.
+      // You can extract the error message from the response body (assuming it's in JSON format).
+      var responseData = jsonDecode(body);
+      var errorMessage = responseData['error'];
+
+      final snackBar = SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: 'Error',
+          message: errorMessage ?? 'Something went wrong. User registration failed.',
+          contentType: ContentType.failure,
+        ),
+      );
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(snackBar);
+    } else {
+      // Handle other error scenarios
+      final snackBar = SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: 'Error',
+          message: 'Something went wrong. User registration failed.',
+          contentType: ContentType.failure,
+        ),
+      );
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(snackBar);
+    }
+  } catch (e) {
+    print(e.toString());
   }
+}
+
 
   @override
   void initState() {
@@ -110,7 +121,7 @@ class _CreateAccountState extends State<CreateAccount> {
                         0 * fem, 0 * fem, 63 * fem, 0 * fem),
                     child: TextButton(
                       onPressed: () {
-                        Navigator.pushReplacement (
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) => CompleteProfile()),
@@ -386,26 +397,6 @@ class _CreateAccountState extends State<CreateAccount> {
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 10 * fem),
-                              child: CheckboxListTile(
-                                title: Text(
-                                  'Remember me',
-                                  style: TextStyle(
-                                    fontFamily: 'Satoshi',
-                                    fontSize: 16 * ffem,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xff868889),
-                                  ),
-                                ),
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
-                                value: false, // set initial value here
-                                onChanged: (newValue) {
-                                  // do something with the new value
-                                },
                               ),
                             ),
                           ],

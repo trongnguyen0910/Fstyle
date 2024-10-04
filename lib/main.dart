@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/utils.dart';
-import 'package:myapp/page-1/welcomescreen.dart';
+import 'package:myapp/Home/welcomescreen.dart';
 // import 'package:myapp/page-1/waitingscreen.dart';
 // import 'package:myapp/page-1/vector-1.dart';
 // import 'package:myapp/page-1/yourprofilegetstartedscreen1.dart';
@@ -59,18 +60,14 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
 	@override
 	Widget build(BuildContext context) {
-	return MaterialApp(
+	return GetMaterialApp(
 		title: 'Flutter',
 		debugShowCheckedModeBanner: false,
 		scrollBehavior: MyCustomScrollBehavior(),
 		theme: ThemeData(
 		primarySwatch: Colors.blue,
 		),
-		home: Scaffold(
-		body: SingleChildScrollView(
-			child: WelcomeScreen(),
-		),
-		),
+		home: WelcomeScreen(),
 	);
 	}
 }

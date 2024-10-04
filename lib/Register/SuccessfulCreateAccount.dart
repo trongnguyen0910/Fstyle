@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/SignIn/SignIn.dart';
-import 'package:myapp/page-1/welcomescreen.dart';
+import 'package:myapp/Home/welcomescreen.dart';
 
 import 'package:myapp/utils.dart';
 
@@ -13,9 +13,9 @@ class SuccessfulCreateAccount extends StatelessWidget {
     double baseWidth = 430;
     double fem = MediaQuery.of(context).size.width / baseWidth;
     double ffem = fem * 0.97;
-    return Scaffold(
+    return
       
-          body: Container(
+        Container(
             width: double.infinity,
             child: TextButton(
               // sucessfulcreateaccountgetstart (24:46)
@@ -36,7 +36,7 @@ class SuccessfulCreateAccount extends StatelessWidget {
                       left: 31 * fem,
                       top: 46 * fem,
                       child: Container(
-                        width: 363 * fem,
+                       width: 368 * fem,
                         height: 806 * fem,
                         decoration: BoxDecoration(
                           boxShadow: [
@@ -295,17 +295,7 @@ class SuccessfulCreateAccount extends StatelessWidget {
                                           height: 24 * fem,
                                         ),
                                       ),
-                                      Text(
-                                        // remembermeVtU (53:93)
-                                        'Remember me',
-                                        style: SafeGoogleFont(
-                                          'Satoshi',
-                                          fontSize: 15 * ffem,
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.2575 * ffem / fem,
-                                          color: Color(0xff000000),
-                                        ),
-                                      ),
+                                      
                                     ],
                                   ),
                                 ),
@@ -818,8 +808,8 @@ class SuccessfulCreateAccount extends StatelessWidget {
                 ),
               ),
             ),
-          ),
           );
+          
     
   }
 }
